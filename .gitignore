@@ -1,0 +1,16 @@
+# Generated files - do not commit
+results.json
+plots/
+ 
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+ 
+# VS Code
+.vscode/
+ 
+# OS files
+.DS_Store
+Thumbs.db
+ 
