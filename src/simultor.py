@@ -172,3 +172,131 @@ class SuperscalarBase:
             "stall_cycles":      self.stall_cycles,
             "branch_mispredicts": self.branch_mispredicts,
         }
+    
+# ─────────────────────────────────────────────
+#  In-Order Superscalar (Static Scheduling)
+#  Contributor: Member 2
+# ─────────────────────────────────────────────
+
+class InOrderSuperscalar(SuperscalarBase):
+    """
+    2- or 4-wide in-order issue.
+    Stalls on RAW hazards. No speculation.
+    Branch resolves in 1 cycle; incorrect prediction flushes fetch.
+    """
+
+    def __init__(self, program, width=2, memory_size=1024):
+        super().__init__(program, width, memory_size, name=f"InOrder-{width}wide")
+        # Scoreboard: which cycle each register will be ready
+        self.scoreboard: List[int] = [0] * 32   # 0 = ready now
+
+    def _reg_ready(self, r: int, current_cycle: int) -> bool:
+        return self.scoreboard[r] <= current_cycle
+
+    def _can_issue(self, instr: Instruction, current_cycle: int) -> bool:
+        """Check RAW hazards for in-order issue."""
+        if instr.op == OpType.NOP:
+            return True
+        rs1_ok = self._reg_ready(instr.rs1, current_cycle)
+        rs2_ok = instr.op in (OpType.STORE, OpType.BRANCH, OpType.ALU, OpType.MUL) \
+                 and self._reg_ready(instr.rs2, current_cycle) or \
+                 instr.op in (OpType.LOAD,) and True
+        # For LOAD only rs1 matters at issue (rs2 unused)
+        if instr.op == OpType.LOAD:
+            return rs1_ok
+        return rs1_ok and self._reg_ready(instr.rs2, current_cycle)
+
+    def run(self) -> Dict:
+        # Straightforward cycle-accurate simulation
+        # Each cycle: try to fetch+issue up to `width` instructions
+        # then advance execution units by 1 cycle
+        in_flight: List[PipelineSlot] = []
+
+        while self.pc < len(self.program) or in_flight:
+            self.cycle += 1
+
+            # ── Writeback (complete execution) ──────────────
+            newly_done = []
+            still_busy = []
+            for slot in in_flight:
+                slot.cycles_left -= 1
+                if slot.cycles_left <= 0:
+                    newly_done.append(slot)
+                else:
+                    still_busy.append(slot)
+            in_flight = still_busy
+
+            for slot in newly_done:
+                instr = slot.instr
+                if instr.op in (OpType.ALU, OpType.MUL):
+                    self.rf.write(instr.rd, slot.result)
+                elif instr.op == OpType.LOAD:
+                    addr = self.rf.read(instr.rs1) + instr.imm
+                    val  = self.mem_read(addr)
+                    self.rf.write(instr.rd, val)
+                elif instr.op == OpType.STORE:
+                    addr = self.rf.read(instr.rs1) + instr.imm
+                    self.mem_write(addr, self.rf.read(instr.rs2))
+                self.instr_retired += 1
+                self.log.append({
+                    "cycle": self.cycle,
+                    "pc":    slot.pc,
+                    "instr": str(instr),
+                    "mode":  "commit"
+                })
+
+            # ── Fetch + Issue (up to `width` instructions) ──
+            issued_this_cycle = 0
+            stall_this_issue  = False
+
+            while issued_this_cycle < self.width and \
+                  self.pc < len(self.program) and \
+                  not stall_this_issue:
+
+                instr = self.program[self.pc]
+
+                if not self._can_issue(instr, self.cycle):
+                    stall_this_issue = True
+                    self.stall_cycles += 1
+                    break
+
+                # Mark destination as busy
+                if instr.op in (OpType.ALU, OpType.MUL, OpType.LOAD) and instr.rd != 0:
+                    ready_cycle = self.cycle + LATENCY[instr.op]
+                    self.scoreboard[instr.rd] = ready_cycle
+
+                # Compute result for ALU immediately (value available after latency)
+                result = 0
+                if instr.op in (OpType.ALU, OpType.MUL):
+                    result = self.execute_alu(instr)
+
+                # Branch: resolve immediately (no prediction, just stall 1 cycle)
+                if instr.op == OpType.BRANCH:
+                    rs1 = self.rf.read(instr.rs1)
+                    rs2 = self.rf.read(instr.rs2)
+                    taken = (instr.mnem == "beq" and rs1 == rs2) or \
+                            (instr.mnem == "bne" and rs1 != rs2)
+                    if taken:
+                        self.pc += instr.imm
+                        self.instr_retired += 1
+                        issued_this_cycle += 1
+                        break
+                    else:
+                        self.pc += 1
+                        self.instr_retired += 1
+                        issued_this_cycle += 1
+                        continue
+
+                slot = PipelineSlot(
+                    instr=instr,
+                    pc=self.pc,
+                    cycles_left=LATENCY[instr.op],
+                    rd=instr.rd,
+                    result=result,
+                    issued_cycle=self.cycle,
+                )
+                in_flight.append(slot)
+                self.pc += 1
+                issued_this_cycle += 1
+
+        return self.stats()
