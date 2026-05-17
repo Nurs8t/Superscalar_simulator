@@ -37,9 +37,6 @@ python main.py dot_product
 cd ../visualization
 python visualize.py
 
-# 4. Run tests
-cd ../tests
-python test_simulator.py
 ```
 
 ---
@@ -87,7 +84,7 @@ Superscalar-simulator/
 | Member  | Role | Files |
 |---------|------|-------|
 | Nurseyit| Wide Fetch/Decode + base infrastructure | `simulator.py` (base class, RegisterFile, PipelineSlot) |
-| Bekzhan | In-Order Issue + tests | `simulator.py` (InOrderSuperscalar), `test_simulator.py` |
+| Bekzhan | In-Order Issue | `simulator.py` (InOrderSuperscalar) |
 | Nursayat| Out-of-Order Issue + Branch Predictor | `ooo_scheduler.py` |
 | Ali     | ILP Analysis + Visualization + Main | `benchmarks.py`, `main.py`, `visualize.py` |
 
