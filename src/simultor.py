@@ -2,7 +2,7 @@
 Superscalar / Multiple-Issue Simulator
 Topic 5: Multiple Issue, Static/Dynamic Scheduling, Speculation
 
-Author: Member 1 (Wide Fetch/Decode) + Member 2 (In-Order Issue)
+Author: Nurseyit (Wide Fetch/Decode) + Bekzhan (In-Order Issue)
 AI Tool: Claude (claude-sonnet-4-20250514)
 """
 

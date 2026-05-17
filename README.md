@@ -2,7 +2,7 @@
 
 **Course:** Computer Architecture and Operating Systems  
 **Topic 5:** Multiple Issue, Static / Dynamic Scheduling, Speculation  
-**Team:** [K27]  
+**Team:** [K67]  
 
 ---
 
@@ -47,16 +47,14 @@ python test_simulator.py
 ## Project Structure
 
 ```
-superscalar-sim/
+Superscalar-simulator/
 ├── src/
-│   ├── simulator.py        # Base class + InOrder Superscalar  (Member 1 & 2)
-│   ├── ooo_scheduler.py    # Out-of-Order + Branch Predictor   (Member 3)
-│   ├── benchmarks.py       # Benchmark programs + ILP oracle   (Member 4)
-│   └── main.py             # Runner + summary table            (Member 4)
+│   ├── simulator.py        # Base class + InOrder Superscalar  (Nurseyit & Bekzhan)
+│   ├── ooo_scheduler.py    # Out-of-Order + Branch Predictor   (Nursayat)
+│   ├── benchmarks.py       # Benchmark programs + ILP oracle   (Ali)
+│   └── main.py             # Runner + summary table            (Ali)
 ├── visualization/
-│   └── visualize.py        # IPC bar charts (matplotlib)       (Member 4)
-├── tests/
-│   └── test_simulator.py   # Unit tests                        (Member 1 & 2)
+│   └── visualize.py        # IPC bar charts (matplotlib)       (Ali)
 ├── AI_USAGE.md             # How AI tools were used
 └── README.md
 ```
@@ -86,12 +84,12 @@ superscalar-sim/
 
 ## Team & Contributions
 
-| Member | Role | Files |
-|--------|------|-------|
-| Member 1 | Wide Fetch/Decode + base infrastructure | `simulator.py` (base class, RegisterFile, PipelineSlot) |
-| Member 2 | In-Order Issue + tests | `simulator.py` (InOrderSuperscalar), `test_simulator.py` |
-| Member 3 | Out-of-Order Issue + Branch Predictor | `ooo_scheduler.py` |
-| Member 4 | ILP Analysis + Visualization + Main | `benchmarks.py`, `main.py`, `visualize.py` |
+| Member  | Role | Files |
+|---------|------|-------|
+| Nurseyit| Wide Fetch/Decode + base infrastructure | `simulator.py` (base class, RegisterFile, PipelineSlot) |
+| Bekzhan | In-Order Issue + tests | `simulator.py` (InOrderSuperscalar), `test_simulator.py` |
+| Nursayat| Out-of-Order Issue + Branch Predictor | `ooo_scheduler.py` |
+| Ali     | ILP Analysis + Visualization + Main | `benchmarks.py`, `main.py`, `visualize.py` |
 
 ---
 
